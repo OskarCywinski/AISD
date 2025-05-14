@@ -266,13 +266,13 @@ def adj_table_to_edge_list(adj_table_graph):
 
 import random
 
-def generate_random_acyclic_graph_matrix(num_nodes, saturation):
+def generate_random_acyclic_graph(num_nodes, saturation):
     """
-    Generates a random DAG (Directed Acyclic Graph) as an adjacency matrix with a specific saturation.
+    Generates a random DAG (Directed Acyclic Graph) as a GraphMatrix object with a specific saturation.
 
     :param num_nodes: Number of nodes in the graph
     :param saturation: Saturation level (0.0 to 1.0), representing the percentage of possible edges
-    :return: Adjacency matrix representing the DAG
+    :return: GraphMatrix object representing the DAG
     """
     if not (0.0 <= saturation <= 1.0):
         raise ValueError("Saturation must be between 0.0 and 1.0")
@@ -285,12 +285,18 @@ def generate_random_acyclic_graph_matrix(num_nodes, saturation):
     # Randomly select edges to include
     selected_edges = random.sample(possible_edges, num_edges)
 
-    # Build the adjacency matrix
-    matrix = [[0] * num_nodes for _ in range(num_nodes)]
+    # Build the GraphMatrix object
+    graph = GraphMatrix(num_nodes)
     for u, v in selected_edges:
-        matrix[u][v] = 1
+        graph.add_edge(u, v)
 
-    return matrix
+    return graph
+
+# Example usage:
+# num_nodes = 5
+# saturation = 0.5
+# dag_graph = generate_random_acyclic_graph(num_nodes, saturation)
+# dag_graph.display()
 
 # Example usage:
 # num_nodes = 5
