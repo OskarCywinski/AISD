@@ -1,5 +1,5 @@
 #   Graph Class
-
+import math
 class Graph:
     def add_edge(self, u, v):
         raise NotImplementedError
@@ -20,30 +20,47 @@ class Graph:
         for u, v in l:
             self.add_edge(u, v)
     
-    def BFS(self, start):
-        visited = set()
-        queue = [start]
-        while queue:
-            node = queue.pop(0)
-            if node not in visited:
-                visited.add(node)
-                print(node, end=' ')
-                for neighbor in self.get_neighbors(node):
-                    if neighbor not in visited:
-                        queue.append(neighbor)
-        print()
-        
-    def DFS(self, start):
-        visited = set()
-        stack = [start]
-        while stack:
-            node = stack.pop()
-            if node not in visited:
-                visited.add(node)
-                print(node, end=' ')
-                for neighbor in self.get_neighbors(node):
-                    if neighbor not in visited:
-                        stack.append(neighbor)
+
+    def export(self):
+        print("Eksportuję graf do TikZ:\n")
+
+        # Użyjemy self.n jeśli jest, w przeciwnym razie spróbujemy get_all_nodes()
+        if hasattr(self, 'n'):
+            nodes = list(range(self.n))
+        else:
+            nodes = list(self.get_all_nodes())
+
+        tikz = ["\\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=2cm, thick, main node/.style={circle,draw}]"]
+
+        # Umieszczamy wierzchołki na okręgu
+        angle_step = 360 / len(nodes)
+        for i in nodes:
+            angle = i * angle_step
+            x = round(5 * math.cos(math.radians(angle)), 2)
+            y = round(5 * math.sin(math.radians(angle)), 2)
+            tikz.append(f"\\node[main node] ({i}) at ({x},{y}) {{{i}}};")
+
+        # Dodajemy krawędzie
+        for i in nodes:
+            for j in nodes:
+                if self.has_edge(i, j):
+                    tikz.append(f"\\path[->] ({i}) edge ({j});")
+
+        tikz.append("\\end{tikzpicture}")
+
+        print("\n".join(tikz))
+            
+        def DFS(self, start):
+            visited = set()
+            stack = [start]
+            while stack:
+                node = stack.pop()
+                if node not in visited:
+                    visited.add(node)
+                    print(node, end=' ')
+                    for neighbor in self.get_neighbors(node):
+                        if neighbor not in visited:
+                            stack.append(neighbor)
         print()
         
     def Kahn(self):
@@ -82,12 +99,14 @@ class Graph:
         temporary = set()  # Nodes with a temporary mark
         permanent = set()  # Nodes with a permanent mark
         topological_order = []  # Result list
+        cycle_found = [False]  # Use a list to allow modification in nested scope
 
         def visit(node):
             if node in permanent:
                 return  # Node is already permanently marked
             if node in temporary:
                 print("Graph has a cycle. Topological sorting is not possible.")
+                cycle_found[0] = True
                 return  # Cycle detected
 
             # Mark the node temporarily
@@ -95,7 +114,8 @@ class Graph:
 
             # Visit all neighbors
             for neighbor in self.get_neighbors(node):
-                visit(neighbor)
+                if not cycle_found[0]:
+                    visit(neighbor)
 
             # Mark the node permanently and add to the result
             temporary.remove(node)
@@ -103,12 +123,13 @@ class Graph:
             topological_order.append(node)
 
         # Step 2: Visit all nodes
-        while unmarked:
+        while unmarked and not cycle_found[0]:
             node = unmarked.pop()
             visit(node)
 
-        # Step 3: Print the result
-        print("Topological Order:", topological_order[::-1])  # Reverse the order
+        # Step 3: Print the result only if no cycle was found
+        if not cycle_found[0]:
+            print("Topological Order:", topological_order[::-1])  # Reverse the order
         
     
 #   Matrix Subclass
@@ -291,6 +312,8 @@ def generate_random_acyclic_graph(num_nodes, saturation):
         graph.add_edge(u, v)
 
     return graph
+
+
 
 # Example usage:
 # num_nodes = 5

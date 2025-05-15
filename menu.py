@@ -1,11 +1,12 @@
 import argparse
 import sys
+import os
 from graph import Graph, GraphAdjTable, GraphMatrix, GraphEdgeList, matrix_to_adj_table, matrix_to_edge_list, edge_list_to_matrix, edge_list_to_adj_table, adj_table_to_matrix, adj_table_to_edge_list, generate_random_acyclic_graph
 
 def help():
     print("\nCommands:")
     print("  Help   > Show this message")
-    print("  Print  > Print the graph")
+    print("  Print_graph  > Print the graph")
     print("  Find   > Check if an edge exists")
     print("  DFS    > perform Depth First Search")
     print("  BFS    > perform Breadth First Search")
@@ -71,6 +72,12 @@ def tarjan():
     global graph
     graph.Tarjan()
 
+def export():
+    global graph
+    print("\\begin{tikzpicture}")
+    print(graph.export())
+    print("\\end{tikzpicture}")
+
 def parse_graph_input(connections, num_nodes):
     # Parsowanie danych wejściowych na połączenia
     valid_connections = []
@@ -85,30 +92,55 @@ def parse_graph_input(connections, num_nodes):
     return connections
 
 def user_provided_from_stdin():
-    # Obsługuje dane z heredoc
-    print("Wczytywanie danych od użytkownika przez heredoc:")
-    sys.stdin = open('/dev/tty')
-    graph_type = input("Type> ").strip().lower().replace(" ", "_")
-    nodes = int(input("Enter the number of nodes: "))
     connections = []
 
-    # Wczytanie połączeń dla każdego węzła
-    for i in range(0, nodes):
-        node_connections = input(f"Node {i}> Enter connected nodes (comma-separated): ").strip()
-        
-        # Parsowanie połączeń
-        if node_connections:
-            connected_nodes = [int(n.strip()) for n in node_connections.split(',')]
-            for node_to in connected_nodes:
-                if node_to != i:  # Nie możemy połączyć węzła z samym sobą
-                    if 0 <= node_to <= nodes:
-                        connections.append((i, node_to))
+    if os.isatty(sys.stdin.fileno()):
+        # Interaktywny tryb
+        print("Interaktywny tryb wprowadzania danych.")
+        while True:
+            try:
+                nodes = int(input("nodes> "))
+                break
+            except:
+                print("Invalid input. Please enter an integer.")
+        for i in range(nodes):
+            while True:
+                raw = input(f"{i}> ").strip()
+                if not raw:
+                    break
+                try:
+                    conn_nodes = list(map(int, raw.replace(',', ' ').split()))
+                    # Sprawdź poprawność
+                    if all(0 <= n < nodes and n != i for n in conn_nodes):
+                        for n in conn_nodes:
+                            connections.append((i, n))
+                        break  # poprawne dane
                     else:
-                        print(f"Warning: Node {node_to} does not exist. Skipping this connection.")
-                else:
-                    print(f"Warning: Node {i} cannot connect to itself. Skipping this connection.")
-    
-    return graph_type,nodes, connections
+                        print(f"Niedozwolone połączenia. Możesz łączyć tylko z node'ami od 0 do {nodes-1}, bez połączeń do siebie ({i}).")
+                except ValueError:
+                    print("Podaj tylko liczby oddzielone spacją lub przecinkiem.")
+    else:
+        # Heredoc – dane z stdin
+        print("Tryb heredoc – wczytywanie danych z stdin.")
+        lines = sys.stdin.read().strip().splitlines()
+        nodes = len(lines)
+        for i, line in enumerate(lines):
+            raw = line.strip()
+            try:
+                conn_nodes = list(map(int, raw.split()))
+                for n in conn_nodes:
+                    if 0 <= n < nodes and n != i:
+                        connections.append((i, n))
+                    else:
+                        print(f"Pominięto niedozwolone połączenie: {i} → {n}")
+            except ValueError:
+                print(f"Pominięto nieprawidłowe dane w linii {i}: {line}")
+    print(connections)
+
+    # Pytamy o typ grafu na końcu
+    sys.stdin = open('/dev/tty')
+    graph_type = input("Type> ").strip().lower().replace(" ", "_")
+    return graph_type, nodes, connections
 
 def user_provided_from_file(file_path):
     # Wczytuje dane z pliku
@@ -177,8 +209,21 @@ elif args.generate:
             break
         print(f"Invalid type. Allowed types: {', '.join(allowed_types)}")
     
-    nodes = int(input("nodes> "))
-    saturation = int(input("saturation> "))
+    while True:
+        try:
+            nodes = int(input("nodes> "))
+            break
+        except:
+            print("Invalid input. Please enter an integer.")
+    while True:
+        try:
+            saturation = int(input("saturation> "))
+            if saturation < 0 or saturation > 100:
+                print("Saturation must be between 0 and 100.")
+                continue
+            break
+        except:
+            print("Invalid input. Please enter an integer.")
     match type_input:
         case "matrix" | "edge_list" | "adjacency_table":
             globals()[f"generate_{type_input}"](nodes, saturation)
