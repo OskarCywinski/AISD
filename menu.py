@@ -6,7 +6,7 @@ from graph import Graph, GraphAdjTable, GraphMatrix, GraphEdgeList, matrix_to_ad
 def help():
     print("\nCommands:")
     print("  Help   > Show this message")
-    print("  Print_graph  > Print the graph")
+    print("  Print  > Print the graph")
     print("  Find   > Check if an edge exists")
     print("  DFS    > perform Depth First Search")
     print("  BFS    > perform Breadth First Search")
@@ -49,18 +49,34 @@ def print_graph():
     
 def find():
     global graph
-    in_node = int(input("from> "))
-    out_node = int(input("to> "))
+    while True:
+        try:
+            in_node = int(input("from> "))
+            if in_node < 0 or in_node >= len(graph.get_all_nodes()):
+                print(f"Node {in_node} is out of range. Please enter a valid node number.")
+                continue
+            break
+        except:
+            print("Invalid input. Please enter an integer.")
+    while True:
+        try:
+            out_node = int(input("to> "))
+            if out_node < 0 or out_node >= len(graph.get_all_nodes()):
+                print(f"Node {out_node} is out of range. Please enter a valid node number.")
+                continue
+            break
+        except:
+            print("Invalid input. Please enter an integer.")
     if graph.has_edge(int(in_node), int(out_node)):
-        print(True)
+        print(True, ":  edge (", in_node, ",", out_node, ") exists in the graph")
     else:
-        print(False)
+        print(False, ":  edge (", in_node, ",", out_node, ") does not exist in the graph")
         
-def dfs():
+def depth_first_search():
     global graph
     graph.DFS(0)
     
-def bfs():
+def breadth_first_search():
     global graph
     graph.BFS(0)
     
@@ -74,9 +90,7 @@ def tarjan():
 
 def export():
     global graph
-    print("\\begin{tikzpicture}")
-    print(graph.export())
-    print("\\end{tikzpicture}")
+    graph.export()
 
 def parse_graph_input(connections, num_nodes):
     # Parsowanie danych wejściowych na połączenia
@@ -87,9 +101,7 @@ def parse_graph_input(connections, num_nodes):
         else:
             print(f"Warning: Invalid connection {node_from}-{node_to}, skipping.")
     
-    return valid_connections
-    
-    return connections
+    return valid_connections 
 
 def user_provided_from_stdin():
     connections = []
@@ -235,12 +247,11 @@ else:
 
 # Wykonywanie komend po wybraniu
 while True:
-    print("\nNode Count>")
-    print(" Nodes>")
+    print("\nNode Count>", len(graph.get_all_nodes()))
     action = input("Action> ").strip().lower()
     
     match action:
-        case "help" | "print_graph" | "find" | "dfs" | "bfs" | "kahn" | "tarjan" | "export" | "exit":
-            globals()[action]()
+        case "help" | "print" | "find" | "depth-first search" | "breadth-first search" | "kahn" | "tarjan" | "export" | "exit":
+            globals()[action.replace(" ", "_").replace("-","_")]() if action != "print" else print_graph()
         case _:
             print("Invalid command. Type 'help' for a list of available commands.")

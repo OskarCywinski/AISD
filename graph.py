@@ -49,18 +49,31 @@ class Graph:
         tikz.append("\\end{tikzpicture}")
 
         print("\n".join(tikz))
-            
-        def DFS(self, start):
-            visited = set()
-            stack = [start]
-            while stack:
-                node = stack.pop()
-                if node not in visited:
-                    visited.add(node)
-                    print(node, end=' ')
-                    for neighbor in self.get_neighbors(node):
-                        if neighbor not in visited:
-                            stack.append(neighbor)
+    
+    def BFS(self, start):
+        visited = set()
+        queue = [start]
+        while queue:
+            node = queue.pop(0)
+            if node not in visited:
+                visited.add(node)
+                print(node, end=' ')
+                for neighbor in self.get_neighbors(node):
+                    if neighbor not in visited:
+                        queue.append(neighbor)
+        print()
+        
+    def DFS(self, start):
+        visited = set()
+        stack = [start]
+        while stack:
+            node = stack.pop()
+            if node not in visited:
+                visited.add(node)
+                print(node, end=' ')
+                for neighbor in self.get_neighbors(node):
+                    if neighbor not in visited:
+                        stack.append(neighbor)
         print()
         
     def Kahn(self):
